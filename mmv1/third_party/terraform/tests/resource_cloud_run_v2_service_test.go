@@ -247,6 +247,15 @@ func TestAccCloudRunV2Service_cloudrunv2ServiceProbesUpdate(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"name", "location"},
 			},
+			{
+				Config: testAccCloudRunV2Service_cloudrunv2ServiceUpdateWithGRPCStartupProbeAndLiveness(context),
+			},
+			{
+				ResourceName:            "google_cloud_run_v2_service.default",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name", "location"},
+			},
 		},
 	})
 }
@@ -359,6 +368,32 @@ resource "google_cloud_run_v2_service" "default" {
           http_headers {
             name = "Some-Name"
           }
+        }
+      }
+    }
+  }
+}
+`, context)
+}
+
+func testAccCloudRunV2Service_cloudrunv2ServiceUpdateWithGRPCStartupProbeAndLiveness(context map[string]interface{}) string {
+	return Nprintf(`
+resource "google_cloud_run_v2_service" "default" {
+  name     = "tf-test-cloudrun-service%{random_suffix}"
+  location = "us-central1"
+  
+  template {
+    containers {
+      image = "gcr.io/yanweiguo-test/grpc:latest"
+      startup_probe {
+        grpc {
+          port = 8080
+          service = "pass"
+        }
+      }
+      liveness_probe {
+        grpc {
+          service = "pass"
         }
       }
     }
